@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.3.0/firebase-database.js"></script>
   <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
 </head>
 
@@ -27,7 +28,7 @@
             </h3>
           </div>
           <div class="panel-body">
-            <table class="table table-hover" id='train-table'>
+            <table class="table table-hover" >
               <thead>
                 <tr>
                   <th>Train Name</th>
@@ -37,7 +38,7 @@
                   <th>Minutes Away</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id='train-table'>
 
               </tbody>
             </table>
@@ -95,29 +96,30 @@
        };
        
        firebase.initializeApp(firebaseConfig);
-    //    issue right here; error message "Uncaught TypeError: firebase.database is not a function"//
+
        var database = firebase.database();
 
        $("#submitBtn").on("click", function(e) {
            e.preventDefault();
            var input = $('input');
-           database.ref().push({
-               description: input[0].value,
-               time: Date.now()
-           });
+        //    database.ref().push({
+        //        description: input[0].value,
+        //        time: Date.now()
+        //    });
 
-           input.val('');
-       });
-       var name = $("#train-name-input").val();
+        //    input.val('');
+
+        var name = $("#train-name-input").val();
        var destination = $("#destination-input").val();
        var frequency = $("#frequency-input").val();
        var arrival = $("#first-train-input").val();
+       
 
        var newTrain = {
            name,
            destination,
            frequency,
-           arrival
+           arrival,
        };
        database.ref().push(newTrain);
        console.log(name);
@@ -130,23 +132,39 @@
         $("#frequency-input").val("");
         $("#first-train-input").val("");
 
-        database.ref().on("child_added", function(childSnapshot) {
-        console.log(childSnapshot.val()); 
-        console.log(name);
-        console.log(destination);
-        console.log(frequency);
-        console.log(arrival); 
-        
-           
-    //    database.ref().on("child_added", function(snapshot) {
-    //    var data = snapshot.val();
+       });
 
-    //    console.log(data);
+       
 
-    //    var now = moment();
-    //    var date = moment(data.time);
+       database.ref().on("child_added", function(snapshot) {
 
-    //    var overdue = now.diff(date, 'minutes');
+            var FREq = snapshot.val().frequency;
+
+        var diffTime = moment().diff(moment(FREq), "minutes");
+       var tRemainder = diffTime % FREq;
+       var tMinutesTillTrain = FREq - tRemainder;     
+       var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+    
+       var data = snapshot.val();
+
+       console.log(data);
+
+       var now = moment();
+       var date = moment(data.time);
+
+       var overdue = now.diff(date, 'minutes');
+
+       var newRow = $("<tr>").append(`
+                <td>${snapshot.val().name}</td>
+                <td>${snapshot.val().destination}</td>
+                <td>${FREq}</td>
+                <td>${snapshot.val().arrival}</td>
+                <td>${nextTrain}</td>
+
+       `);
+       $("#train-table").append(newRow);
+                    
+              
 
     //    var newTrain = $('<div>')
     //    newTrain.addClass('newTrain');
@@ -156,9 +174,9 @@
     //    newTrain.append(overdueDiv);
     //    $("#new-train").append(newTrain);
 
-    //    }, function(errorObject) {
-    //    console.log("Errors handled: " + errorObject.code);
-    //    });
+       }, function(errorObject) {
+       console.log("Errors handled: " + errorObject.code);
+       });
 
    </script>
 
