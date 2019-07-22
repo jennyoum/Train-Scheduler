@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <title>Train Scheduler</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+</head>
+
+<body>
+    <script>
+         var firebaseConfig = {
+            apiKey: "AIzaSyANAifCtSMEliHzfmKOvNqRe-H341mVMmI",
+            authDomain: "database-e63ca.firebaseapp.com",
+            databaseURL: "https://database-e63ca.firebaseio.com",
+            projectId: "database-e63ca",
+            storageBucket: "database-e63ca.appspot.com",
+            messagingSenderId: "405572416129",
+            appId: "1:405572416129:web:6884b374841f7930"
+            };
+        
+        firebase.initializeApp(firebaseConfig);
+
+        var database = firebase.database();
+
+        $("#submitBtn").on("click", function(e) {
+            e.preventDefault();
+            var input = $('input');
+            database.ref().push({
+                description: input[0].value,
+                time: Date.now()
+            });
+
+            input.val('');
+        });
+        database.ref().on("child_added", function(snapshot) {
+        var data = snapshot.val();
+
+        console.log(data);
+
+        var now = moment();
+        var date = moment(data.time);
+
+        var overdue = now.diff(date, 'minutes');
+
+        var newTrain = $('<div>')
+        newTrain.addClass('newTrain');
+        var descDiv = $('<div>').text(data.description);
+        newTrain.append(descDiv);
+        var overdueDiv = $('<div>').text(overdue + " minutes overdue");
+        newTrain.append(overdueDiv);
+        $("#new-train").append(newTrain);
+
+        }, function(errorObject) {
+        console.log("Errors handled: " + errorObject.code);
+        });
+
+    </script>
+
+  <div class="container">
+    <div class="jumbotron" style="background-color: black; color: white">
+      <h1 class="text-center">Train Scheduler</h1>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <strong>Current Train Schedule</strong>
+            </h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-hover" id='train-table'>
+              <thead>
+                <tr>
+                  <th>Train Name</th>
+                  <th>Destination</th>
+                  <th>Frequency (min)</th>
+                  <th>Next Arrival</th>
+                  <th>Minutes Away</th>
+                </tr>
+              </thead>
+              <tbody>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <strong>Add Train</strong>
+            </h3>
+            <div id="new-train"></div>
+          </div>
+          <div class="panel-body">
+
+            <form>
+              <div class="form-group">
+                <label for="train-name-input">Train Name</label>
+                <input type="text" class="form-control" id="train-name-input">
+              </div>
+              <div class="form-group">
+                <label for="destination-input">Destination</label>
+                <input type="text" class="form-control" id="destination-input">
+              </div>
+              <div class="form-group">
+                <label for="first-train-input">First Train Time (HH:mm - military time)</label>
+                <input type="text" class="form-control" id="first-train-input">
+              </div>
+              <div class="form-group">
+                <label for="frequency-input">Frequency (min)</label>
+                <input type="text" class="form-control" id="frequency-input">
+              </div>
+              <button type="submit" class="btn btn-primary" id="submitBtn">Submit</button>
+            </form>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+
+</html>
